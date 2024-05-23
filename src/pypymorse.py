@@ -54,6 +54,8 @@ EXITSTRING="Exit with Esc"
 OFFSTRING ="Toggle FFT On/Off with Space  (now off)"
 ONSTRING  ="Toggle FFT On/Off with Space  (now on) "
 WAITSTRING="S-Blaster DSP Mixture Ratio 1:%d  (+/-) "
+SAMPSTRING = "%d S-Blaster Samples per Second  "
+STATSTRING = "Avrg Dot:%d  Avrg Dash:%d (* resets)   "
 
 FLIP=5 # /* levels above average sufficient to trigger tone detected */
 LOG2N=4 # /* Adjust according to N way above */ 
@@ -88,8 +90,9 @@ def FFT(stream):
   
   
   for k in range(0, N+N):
-    for l in range (0, waitfactor):
-      read_data(stream) 
+    #for l in range (1, waitfactor):
+    #  read_data(stream) 
+    if (waitfactor > 1): read_data_buffer(stream, waitfactor - 1)
     f[k] = (read_data(stream) ^ 0x80) - 128
   # print samples
   #for k in range(0, N+N - 4):
@@ -217,13 +220,7 @@ def begin():
   else: screen.cprintf(OFFSTRING);
   screen.gotoxy(40,21); screen.cprintf(EXITSTRING);
   screen.gotoxy(40,25); screen.cprintf(WAITSTRING, waitfactor);
-  """
-  updatecursor('=','>');
-  for (l=1,line=0 ; l<N ; l++,line+=160) {
-    fft[l]=0;
-    pokeb(videoseg,80+line,'­');
-  }
-  """
+ 
   updatecursor('=','>')
   line = 0
   for l in range(1, N):
@@ -284,7 +281,6 @@ firsttone = 0
 
 def learn():
   global oncounter
-  global counterdots
   global firsttone
   global avrgdot
   global avrgdash
@@ -305,7 +301,7 @@ def learn():
             if (firsttone>(oncounter<<1)): # { /* firsttone=dash oncounter=dot */
               dashes[0]=sumdashes=avrgdash=firsttone
               dots[0]=sumdots=avrgdot=oncounter
-              counterdashes=counterdots=1
+              counterdashes=counterdots=1              
             else: firsttone=oncounter # /* not different enough */
           else:
             if (oncounter>(firsttone<<1)): # { /* oncounter=dash firsttone=dot */
@@ -319,13 +315,13 @@ def learn():
             dashes[counterdashes]=oncounter
             sumdashes+=oncounter
             counterdashes+=1
-            avrgdash=sumdashes/counterdashes
+            avrgdash=sumdashes // counterdashes
         else:
-          if (counterdots<M): # /* still some to learn about dots */        
+          if (counterdots < M): # /* still some to learn about dots */        
             dots[counterdots]=oncounter
             sumdots+=oncounter
             counterdots+=1
-            avrgdot=sumdots/counterdots
+            avrgdot=sumdots // counterdots
         if ((counterdots==M) and (counterdashes==M)): # { /* enough learning */
           counterdots=counterdashes=0
           reset=False
@@ -348,7 +344,6 @@ def tone2morse():
   global counterdots
   global counterdashes
   
-  screen.refresh()
   if (tonedetected):
     oncounter += waitfactor
     if (offcounter>0):
@@ -364,7 +359,7 @@ def tone2morse():
         sumdashes-=dashes[counterdashes]
         dashes[counterdashes]=oncounter
         sumdashes+=oncounter;
-        avrgdash=(sumdashes>>LOG2M)
+        avrgdash=int(sumdashes>>LOG2M)
         if (counterdashes==(M-1)): counterdashes=0
         else: counterdashes+=1
       else:
@@ -379,12 +374,11 @@ def tone2morse():
   return
   
 # /*----------------------------- Morse to Text --------------------------------*/
-#static int code=0,mask=1,x=1,y=1,y160=160,punctuation;
+
 code = 0
 mask = 1
 x = y = 1
 y160 = 160
-
 
 def morse2text():  
   global code
@@ -509,6 +503,8 @@ def morse2text():
           c=':'; punctuation=True
         else:
           c='■'; punctuation=False
+        print(c, end='')
+        sys.stdout.flush()
         screen.pokeb(0,(x<<1)+y160,c);
         x = x + 1
         
@@ -543,7 +539,10 @@ def read_data(stream):
   buf = stream.read(1) # Return a 16 bits buffers
   high = buf[1]
   return high
-  
+
+def read_data_buffer(stream, size):
+  buf = stream.read(size)
+  return buf
 def updatecursor(c1, c2): # /* displays selected frequency cursor */
   global freq
   global freqm1
@@ -611,19 +610,38 @@ def handlekey(key):
   updatecursor('=','>');
   
   return False
-
-
   
 def getTimeS():
   return int(time.time())
 
-
-
 def main():
+  global avrgdot
+  global avrgdash
+  global FFTenable
+  global counterdots
+  global counterdashes
+  global M
+  global reset
+  global oncounter
+  global offcounter
+  global dots
+  global dashes
+  global sumdots
+  global sumdashes
+  global firsttone
   parser = argparse.ArgumentParser(description='Morse decoder')
   parser.add_argument('-i', '--input',
     default=-1, metavar='ID', type=int,
     help='Set input device (use --devices to enumerate existing devices)')
+  parser.add_argument('--avrgdot',
+    default = 0, metavar='N', type = int,
+    help='Set default dot sample count and avoid learning phase')
+  parser.add_argument('--avrgdash',
+    default = 0, metavar='N', type = int,
+    help='Set default dash sample count and avoid learning phase')
+  parser.add_argument('--autostart',
+    action='store_true',
+    help='Start decoding automatically (no need to press SPACE)')
   parser.add_argument('--devices',
     action='store_true',
     help='Enumerate and print existing devices and their ID to use with -i')
@@ -650,15 +668,25 @@ def main():
     input_device_index=inputdeviceid)
   screen.init()
   screen.nodelay(True) # do not block when waiting for a key
-    
+  
+  # Decoder settings
+  if (args['avrgdot'] != 0):
+    avrgdot = args['avrgdot']
+  if (args['avrgdot'] != 0):
+    avrgdash = args['avrgdash']
+  if (args['autostart'] == True):
+    FFTenable = True
+    reset = False
+    sumdots = avrgdot * M
+    sumdashes = avrgdash * M
+    dots = [75] * M
+    dashes = [235] * M
   """
   Start C code conversion
   """
   
   KCHECK = 64
   SCHECK = 16
-  SAMPSTRING = "%d S-Blaster Samples per Second  "
-  STATSTRING = "Avrg Dot:%d  Avrg Dash:%d (* resets) "
 
   done = False
   counter = 0 # int
@@ -670,6 +698,20 @@ def main():
   start = getTimeS()
   while (not done) :
     for sloop in range(1, SCHECK + 1):
+      """
+      screen.gotoxy(0,29);
+      screen.cprintf("dots  =%s   ", dots)
+      screen.gotoxy(0,30);
+      screen.cprintf("dashes=%s   ", dashes)
+      screen.gotoxy(40,23);
+      screen.cprintf(STATSTRING,avrgdot,avrgdash);
+      screen.gotoxy(0,26);
+      screen.cprintf("counterdots=%d counterdashes=%d sumdots=%d sumdashes=%d     ", counterdots, counterdashes, sumdots, sumdashes);
+      screen.gotoxy(0,27);
+      screen.cprintf("avrgdot=%d avrgdash=%d firsttone=%d      ", avrgdot, avrgdash, firsttone);
+      screen.gotoxy(0,28);
+      screen.cprintf("oncounter=%d offcounter=%d  reset=%s ", oncounter, offcounter, reset)
+      """
       if (FFTenable):
         for kloop in range(1, KCHECK+1):
           FFT(stream)
@@ -680,9 +722,11 @@ def main():
             tone2morse()
             morse2text()
       else:
-        for kloop in range(1, KCHECK+1): # can be optimized by reading a longer buffer
-          for k in range(0, N+N):
-            read_data(stream)
+        
+        #for kloop in range(1, KCHECK+1): # can be optimized by reading a longer buffer
+        #  for k in range(0, N+N):
+        #    read_data(stream)
+        read_data_buffer(stream, KCHECK * (N + N))
       if (screen.iskeypressed()):
         key = screen.getlastkeypressed()
         done = handlekey(key)
@@ -695,8 +739,8 @@ def main():
       screen.cprintf(SAMPSTRING, counter*((KCHECK*SCHECK)/delta) )
       start = current
       counter = 0
-    screen.gotoxy(40,23);
-    screen.cprintf(STATSTRING,avrgdot,avrgdash);
+    
+    
     screen.refresh()
   
   p.terminate()
