@@ -1,4 +1,5 @@
 #!/usr/bin/env python3 -u
+# -*- coding: latin-1 -*-
 """
 https://www.codeconvert.ai/c-to-python-converter
 
