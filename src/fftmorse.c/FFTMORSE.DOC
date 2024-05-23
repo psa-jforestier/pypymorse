@@ -1,0 +1,377 @@
+/* Warning! This documentation contains extended characters! */
+
+Program: FFTMORSE.ZIP (freeware)
+Date:    1 May 1992
+Version: 1.0
+Files:   FFTMORSE.EXE
+         FFTMORSE.DOC
+         FFTMORSE.C
+
+Turbo-C flags: -mt -1 -d -f- -A -K -G -O -w
+
+Copyright (c) 1992 Fran‡ois Jalbert (jalbert@IRO.UMontreal.CA)
+
+A few more copyright notices so everybody is happy:
+
+  Sound-Blaster (c) 1989-1991 Creative Labs Inc
+  Turbo-C 2.0 (c) 1988 Borland International
+  Sound-Blaster C Library BLAST13 (c) 1991 Joel Lucsy
+  LZEXE 0.91 (c) 1989 Fabrice Bellard
+
+
+Description:
+ÄÄÄÄÄÄÄÄÄÄÄ
+
+This program will decode morse code coming from your short-wave receiver. 
+Extensive attention as been paid to efficiency and to robustness. With a 286/12 
+and a Sound-Blaster 2.0, it operates at about 10kHz and gives me 100% accuracy 
+on good quality signals and good quality (!) key operators. It does not require 
+any special hardware or short-wave receiver capabilities; a simple dynamic 
+microphone hooked to your Sound-Blaster will do the job. 
+
+
+Justification:
+ÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+Since I was given an old 1950 tube short-wave receiver about a year ago to heat 
+up my room in winter, I had been dreaming about being able to understand the 
+morse code I could pick up around the 40 and 80 meter bands. I quickly learned 
+the morse code, but I found that decoding was not feasible in practice. First, 
+I lacked speed. Second, I had to concentrate most of the time on my short-wave 
+receiver since the signals keep drifting back and forth, therefore requiring 
+constant fine tuning adjustments from my part. There is simply no time left to 
+decode any morse code! 
+
+My dream finally became possible when I bought a Sound-Blaster 2.0 last month. 
+Using its Digital Signal Processing (DSP) unit, it is possible with a micro-
+phone (or a direct line) to digitize an analog signal at a rate of up to 15KHz. 
+That is more than enough for the task at hand. 
+
+Unfortunately, the Sound-Blaster comes with no information on how to interface 
+with it in assembly or in some higher-level language. I gave SIMTEL a shot and 
+got lucky; I located the Sound-Blaster C library BLAST13 of Mr. Joel Lucsy. It 
+took only a few minutes to disassemble its DSP routines and get a basic under-
+standing of what's going on. Direct operation is indeed trivial. 
+
+Nevertheless, I decided not to use assembly for this little project since this 
+is invariably time consuming. Instead, I used C and the library I had found. If 
+worse came to worse, I might stick in a couple of assembly functions, but this 
+turned out not to be necessary. I must express my gratitude to Mr. Lucsy for 
+opening the world of the Sound-Blaster to all of us. 
+
+Another important problem is the low quality of signal one must typically face. 
+There is an omnipresent strong background noise, the morse signal comes and 
+goes, its frequency changes all the time, and you usually get two or three 
+different morse signals (of different tone frequency) for a given tuning setup. 
+Basic experimentation confirmed what I had suspected all along. It would be 
+necessary to perform a Fourier analysis in order to filter out noise and 
+undesirable signals. It better be a fast one too! 
+
+If all goes well, I will end up with a series of tone quantified in terms of 
+duration. It should be relatively easy to program a simple learning algorithm 
+which would quickly get accustomed to a given key operator. Automatic decoding 
+would be snap from that point on. This last step should be very dependent on 
+the operator and his regularity. I bet some pretty fancy keys are in use today. 
+They probably insure a good uniformity of the morse code sent. If that's indeed 
+the case, interpreting should not be very difficult. 
+
+There is no program performing the function of FFTMORSE available at SIMTEL as 
+of now. The closest thing I could find involved building some electronic 
+interface between the short-wave and the serial port of the computer. Close but 
+not good enough for me. I wanted something simpler using current technology. 
+Therefore, I believe that this project was justified and I am happy to hereby 
+contribute to the public domain. 
+
+This program has been tested on VGA only. It should run on mono. It has been 
+tested with a Sound-Blaster 2.0 only. It should work with the 1.0 and 1.5 
+versions. I also assume that the Sound-Blaster Pro is hardware backward 
+compatible. Finally, it has been tested on a 12MHz 286 only. It should run on 
+faster machines as well and it does use 286 (186?) or above instructions. In 
+fact, the Sound-Blaster card itself is likely to be the cause of any 
+difficulties you may experience with a 486/33 or a 486/50! 
+
+Feel free to pass along and share copies of my work. If you have any comments 
+or suggestions, I would be very happy to hear from you. My internet e-mail 
+address can be found at the top of this brief document. 
+
+
+Functional Description:
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+The main functions of this program are:
+
+ þ Initialization function begin();
+ þ Fast Fourier transform function FFT();
+ þ Tone detection function FFT2tone();
+ þ Learning function learn();
+ þ Morse interpreter function tone2morse();
+ þ Text interpreter function morse2text();
+ þ Keyboard handling function handlekey();
+ þ The usual main function main();
+
+and I would like to briefly introduce them so you will have a better under-
+standing of what my program does, does not, and what the various interactive 
+functions available do. 
+
+The initialization function clears the screen, initializes the Sound-Blaster 
+DSP, detects whether a mono or a color card is present by the video mode 
+currently in use (7=mono), and draws the various screen elements.
+
+The fast Fourier transform function is quite complex and warrants a section on 
+its own which you will find below. All I want to say at this stage is that 32 
+values are fed from the Sound-Blaster as fast as it can deliver them. The FFT 
+computation then takes place and this results in 15 short integers in the range 
+[0,32] representing the activity in 15 frequency ranges. 
+
+It is also possible to read 64 values from the Sound-Blaster and to discard 
+every other one. This is called a mixture ratio of 1:2. You can also read 96 
+values and discard 2 of them out of 3; a mixture ratio of 1:3. And so forth. 
+A non trivial mixture ratio is sometimes desirable for two reasons. 
+
+First of all, as we saw above, information is read from the Sound-Blaster in 
+short bursts, with a pause in between to perform the FFT calculations. This 
+irregularity somehow introduces noise in the Sound-Blaster output. A mixture 
+ratio of 3 or 4 totally eliminates this noise since data read is more regularly 
+spaced in time. 
+
+Second, varying the mixture ratio allows you to control where one particular 
+tone will show up in the frequency display. The usual gaussian curve moves up 
+and down as the mixture is changed. This also makes it possible for you to 
+better isolate some morse tone buried under other ones of different frequency. 
+
+The tone detection function turned out fairly straightforward. I wanted 
+something which would detect the presence of a tone, presence usually taking 
+the form of a gaussian curve in the frequencies displayed. I decided out of 
+simplicity not to try to be clever and to automatically detect the presence of 
+such a dome. This seemed too problematic when one considers the level of noise 
+often present and the multiple domes also occasionally encountered. 
+
+Instead, I let the user select which frequency area he considers to be the 
+relevant one. Such a relevant frequency area is made up of 5 consecutive 
+frequencies, and this area will determine the presence or absence of a morse 
+tone. This can, of course, be adjusted at all time by the user. 
+
+Activity detection is performed by first computing the average activity of all 
+15 frequencies extracted. This is used to get an idea of the uniform noise 
+level. The total activity in the relevant frequency area is then examined and 
+if this activity is at least 5 above what the average would call for, the 
+relevant frequency area is considered active at that time. This value of 5 is 
+arbitrary, but seems to work well in practice. However, it is recommended to 
+adjust the audio level of your short-wave receiver as low as possible at all 
+time, in order to keep the confusing background noise to a minimum. 
+
+I also discovered that activity in the relevant frequency area may vary 
+somewhat, even though a continuous tone is present. This seems to stem from the 
+nature of the Fourier transform. Therefore, I added a short term memory to my 
+tone detection algorithm. A tone is considered present is at least one of the 
+last 4 cycles turned out active as defined above. Once more, this seems to work 
+very well in practice. 
+
+The learning function collects a total of 8 dots and 8 dashes, and computes an 
+average duration for each of them. This is used to decode tones into morse 
+basic elements. To differentiate between a dot and a tone initially, this 
+function first waits until it encounters a dot-dash or dash-dot pair. This is 
+easily detected by comparing the duration of each consecutive pair. Once such a 
+significative pair is detected, the statistics can be compiled.
+
+What happens if you switch station and the new key operator is somewhat faster 
+or slower than the previous one? I decided once again not to try to be smart 
+and to detect that occurrence automatically. If you think about it, you will 
+find that this can get quite tricky in the presence of noise and a few ghost 
+tones. Instead, you have to manually indicate to the program the need to 
+recompile new key operator statistics. 
+
+The morse interpreter function receives a series of tone presence/absence and 
+their duration. It is a simple thing to compare these durations with the 
+statistics compiled for the current key operator, and to deduce dots and 
+dashes. The statistics are also updated since the current key operator may be 
+warming up and may be slowly picking up speed! 
+
+The text interpreter function receives a series of dots, dashes, and spaces. 
+These are easily translated into their equivalent ASCII values and displayed in 
+a window on the left. I used the international morse code as I found it in my 
+dictionary. I was surprised to see that it includes a few accentuated letters. 
+So be it, their support won't do any harm.
+
+The keyboard handling function is called only if a key pressed has been 
+detected. The appropriate parameters are adjusted and there's really nothing to 
+this function otherwise.
+
+The main function is made of two loops embodied one into the other. The most 
+inner one performs KCHECK cycles each involving 32 sampled values before 
+allowing the keyboard to be checked for a key pressed. The outer loop operates 
+SCHECK times before allowing the update of some secondary information (key 
+operator statistics and actual sampling rate) on the screen. These loops insure 
+that most of the CPU time is spent on the main task. 
+
+So here you have it, a complete informal description of what the program does 
+and how it does it. I do admit that this remains a little bit crude, but I just 
+had one week to spend on this. Although I do not plan on releasing future 
+versions, I'll be happy to hear from you. So please do not hesitate to write!
+
+
+FFT Technical Notes:
+ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+The most complex element of this small project is by far the fast Fourier 
+transform algorithm I had to develop. My first prototype was a simple direct 
+application of discrete Fourier transforms. I used the 287 for the floating 
+point operations, but the resulting code turned out too slow on my 286/12. A 
+long integer version also proved too slow. Before jumping into assembly, I 
+decided to give a short integer version a try. It turned out not too bad. Here 
+is first of all the background information concerning it. 
+
+The Fourier polynomial on an interval [0,2ã] divided into 2N segments reads: 
+
+                    a0   N-1 Ú                       ¿   aN 
+             p(x) = ÄÄ +  ä  ³ a cos(lx) + b sin(lx) ³ + ÄÄ cos(Nx)
+                     2   l=1 À  l           l        Ù    2 
+
+I use 2N intervals since this even number results into more symmetry for the 
+trigonometric values involved. The underlying knots are:
+
+                             ã 
+                         x = Ä k      for k=0,...,2N-1 
+                          k  N 
+
+The usual analysis will yield the following discrete Fourier coefficients:
+
+                    1 2N-1          Ú ã    ¿
+                a = Ä   ä  f(x ) cos³ Ä kl ³      for l=0,...,N
+                 l  N  k=0    k     À N    Ù
+
+                    1 2N-1          Ú ã    ¿
+                b = Ä   ä  f(x ) sin³ Ä kl ³      for l=1,...,N-1
+                 l  N  k=0    k     À N    Ù
+
+I will immediately discard a  and a  and these shall not be computed.
+                            0      N
+
+It is obvious that some look-up tables can be computed in advance to speed up 
+things later on. We therefore have the following definitions: 
+
+                      1
+                  f = Ä f(x )                 for k=0,...,2N-1
+                   k  N    k
+
+                         Ú ã   ¿
+                  c = cos³ Ä k ³ = cos(x )    for k=0,...,2N-1
+                   k     À N   Ù        k
+
+                         Ú ã   ¿
+                  s = sin³ Ä k ³ = sin(x )    for k=0,...,2N-1
+                   k     À N   Ù        k
+
+The quantities we want to compute can now be restated as:
+
+                      2N-1
+                  a =   ä  f  c               for l=1,...,N
+                   l   k=0  k  (kl)%(2N)
+
+                      2N-1
+                  b =   ä  f  s               for l=1,...,N
+                   l   k=0  k  (kl)%(2N)
+
+where % stands for the usual modulo operator.
+
+This is exactly what the first version of my short integer Fourier transform 
+did. In order to avoid short integer overflows and to get the maximum number 
+of bits of precision in the final result, I did make a few scaling changes: 
+
+1) The values coming from the Sound-Blaster lie in the interval [0,255] and I 
+   rescaled them into [-128,127] in order to better repartition the bits. This 
+   helped tremendously. 
+
+2) I didn't include 1/N in the f 's involved.
+                                k
+
+3) I multiplied the s 's and the c 's by 16 to get 4 bits of integer precision.
+                     k            k
+
+4) The resulting a 's and b 's are divided by 2048 to bring them into [-16,16].
+                  l        l
+
+5) The final results are ³ a ³ + ³ b ³ which all belong to the interval [0,32].
+                            l       l
+
+This computation of Fourier coefficients implies only short integer operations, 
+half of which are unfortunately multiplications. This first attempt worked 
+reasonably fast, but not fast enough. I wanted to have a very good sampling 
+rate before getting into the next steps. This will be a long chain and if the 
+starting information is scarce and/or of poor quality, I fear that this may 
+hurt me later on. 
+
+I tried to cheat a little bit and to combine the Fourier coefficients as in:
+
+               2N-1    Ú                        ¿
+           d =   ä  f  ³ c         + s          ³      for l=1,...,N
+            l   k=0  k À  (kl)%(2N)   (kl)%(2N) Ù
+
+This would cut the operation count by two, but I found the results not so good. 
+This is equivalent to using a different mathematical basis, which is not 
+orthogonal anymore, and which probably has a different physical interpretation 
+than the usual frequency response interpretation I wanted. So I reluctantly 
+went back to the previous separate Fourier coefficients approach. 
+
+I looked into the classical Fast Fourier Transform algorithm, but it offered 
+only an O(N log N) complexity versus the current O(N*N) count. Not good enough 
+to warrant the trouble, I thought. Plus it would involve a lot of playing with 
+array indices, arrays I would rather eliminate altogether... 
+
+So I expanded the equations for the Fourier coefficients and spent two days (!) 
+rearranging terms, finding common sub-expressions, and gradually incorporating 
+that into my code. There was a lot of repetition present, and it obeyed the 
+intuitively expected regularity rules. I eventually came up with a tight and 
+super fast 32 knots version. It is one to two orders of magnitude faster than 
+my first attempt! Not a single array is involved in the middle computations, 
+but a lot of short integer temporary variables are required. I am sampling not 
+to far from the maximum rate supported by my Sound-Blaster. No doubt any 386 
+and 486 will be working at maximum sampling rate with still plenty of time to 
+spare. 
+
+The courageous ones will take a look at function FFT() in my program. Please 
+feel free to double check everything and to report to me ASAP!!! 
+
+
+Operation:
+ÄÄÄÄÄÄÄÄÄ
+
+There are no command line parameters, just type FFTMORSE and there you are. 
+However, a number of keys are in use from within the program.
+
+<space> This toggles FFT on and off. Morse decoding requires the FFT option to 
+        be active. This switch was added to make it possible for you to get a 
+        very good sampling rate while tuning your short-wave receiver. A high 
+        sampling rate improves the quality of the sound coming out ot the 
+        Sound-Blaster. Once you have an interesting station, you should toggle 
+        FFT back on to start decoding the incoming morse code. On fast 
+        computers, this key is probably not very useful.
+
+<+> These change the mixture ratio by throwing away samples every now and then. 
+<-> This makes it possible to move the signal up and down the FFT display until 
+    it is located more or less in the middle. This is where I suspect the 
+    Fourier analysis is at its best. These are only operational if the FFT is 
+    enabled. Too high a value (say 10) is not desirable since this throws away 
+    too much information and slows down everything since the Sound-Blaster can 
+    only supply 15Kb of information per second at best.
+
+<*> Used to toggle learn mode where the program will accumulate statistics 
+    about typical dot and dash lengths. After a while, morse decoding will 
+    resume on its own. Use this whenever you switch station or after 
+    encountering a lot of noise which may have confused the program. Indeed, 
+    the program continuously slowly adapts to changes of rhythm in the morse 
+    code received.
+    
+<Up Arrow>   Used to move the frequency window of interest up and down. This is 
+<Shift Up>   very useful in case the current tone frequency is not exactly in 
+<Shift 5>    the middle of the FFT display, or if several morse signals of 
+<Shift Down> different tone frequencies are active at the same time. In the 
+<Down Arrow> latter case, you can isolate the signal of interest for you.
+
+<Esc> Exit the program.
+
+Note: In order to avoid spending too much time asking the BIOS if a key has 
+      been pressed, key pressed checks are performed only every once in a 
+      while. On my 286/12, that's about once every two seconds. So do not 
+      expect immediate crisp response following your keyboard entries. Response 
+      time also increases with the mixture ratio (keys <+> and <-> above). 
