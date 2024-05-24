@@ -1,5 +1,7 @@
 #!/usr/bin/env python3 -u
-# -*- coding: latin-1 -*-
+# -*- coding: utf-8 -*-
+# encoding is important because we use here some non standard char
+# like the vertical bar (│) or the semi-caret(■)
 """
 https://www.codeconvert.ai/c-to-python-converter
 
