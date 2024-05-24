@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -u
+﻿#!/usr/bin/env python3 -u
 # -*- coding: utf-8 -*-
 # encoding is important because we use here some non standard char
 # like the vertical bar (│) or the semi-caret(■)
