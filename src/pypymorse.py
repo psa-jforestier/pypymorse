@@ -36,6 +36,7 @@ def print_input_device_info(idev):
   
 def print_input_devices():
   p = pyaudio.PyAudio()
+  print("  Audio host API:", p.get_default_host_api_info()['name'])
   print("  Default input device :")
   print_input_device_info(p.get_default_input_device_info())
   print("  Other available input devices :")
@@ -663,7 +664,7 @@ def main():
   inputdevice = p.get_device_info_by_index(inputdeviceid)
   print("Using device audio ID", inputdeviceid, ":\"", inputdevice.get('name'),"\"")
   print("  sample rate :", inputdevice.get('defaultSampleRate'), "; input channels :", inputdevice.get('maxInputChannels'))
-  
+  print("  version :", pyaudio.get_portaudio_version_text())
   stream = p.open(input=True, output = False,
     channels=1,
     rate=44100,
