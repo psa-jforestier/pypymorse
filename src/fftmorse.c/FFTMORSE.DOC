@@ -1,4 +1,4 @@
-/* Warning! This documentation contains extended characters! */
+ï»¿/* Warning! This documentation contains extended characters! */
 
 Program: FFTMORSE.ZIP (freeware)
 Date:    1 May 1992
@@ -9,7 +9,7 @@ Files:   FFTMORSE.EXE
 
 Turbo-C flags: -mt -1 -d -f- -A -K -G -O -w
 
-Copyright (c) 1992 Fran‡ois Jalbert (jalbert@IRO.UMontreal.CA)
+Copyright (c) 1992 FranÃ§ois Jalbert (jalbert@IRO.UMontreal.CA)
 
 A few more copyright notices so everybody is happy:
 
@@ -20,7 +20,7 @@ A few more copyright notices so everybody is happy:
 
 
 Description:
-ÄÄÄÄÄÄÄÄÄÄÄ
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 This program will decode morse code coming from your short-wave receiver. 
 Extensive attention as been paid to efficiency and to robustness. With a 286/12 
@@ -31,7 +31,7 @@ microphone hooked to your Sound-Blaster will do the job.
 
 
 Justification:
-ÄÄÄÄÄÄÄÄÄÄÄÄÄ
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 Since I was given an old 1950 tube short-wave receiver about a year ago to heat 
 up my room in winter, I had been dreaming about being able to understand the 
@@ -96,18 +96,18 @@ address can be found at the top of this brief document.
 
 
 Functional Description:
-ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 The main functions of this program are:
 
- ş Initialization function begin();
- ş Fast Fourier transform function FFT();
- ş Tone detection function FFT2tone();
- ş Learning function learn();
- ş Morse interpreter function tone2morse();
- ş Text interpreter function morse2text();
- ş Keyboard handling function handlekey();
- ş The usual main function main();
+ â–  Initialization function begin();
+ â–  Fast Fourier transform function FFT();
+ â–  Tone detection function FFT2tone();
+ â–  Learning function learn();
+ â–  Morse interpreter function tone2morse();
+ â–  Text interpreter function morse2text();
+ â–  Keyboard handling function handlekey();
+ â–  The usual main function main();
 
 and I would like to briefly introduce them so you will have a better under-
 standing of what my program does, does not, and what the various interactive 
@@ -211,7 +211,7 @@ versions, I'll be happy to hear from you. So please do not hesitate to write!
 
 
 FFT Technical Notes:
-ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 The most complex element of this small project is by far the fast Fourier 
 transform algorithm I had to develop. My first prototype was a simple direct 
@@ -221,28 +221,28 @@ long integer version also proved too slow. Before jumping into assembly, I
 decided to give a short integer version a try. It turned out not too bad. Here 
 is first of all the background information concerning it. 
 
-The Fourier polynomial on an interval [0,2ã] divided into 2N segments reads: 
+The Fourier polynomial on an interval [0,2Åƒ] divided into 2N segments reads: 
 
-                    a0   N-1 Ú                       ¿   aN 
-             p(x) = ÄÄ +  ä  ³ a cos(lx) + b sin(lx) ³ + ÄÄ cos(Nx)
-                     2   l=1 À  l           l        Ù    2 
+                    a0   N-1 â”Œ                       â”   aN 
+             p(x) = â”€â”€ +  Å„  â”‚ a cos(lx) + b sin(lx) â”‚ + â”€â”€ cos(Nx)
+                     2   l=1 â””  l           l        â”˜    2 
 
 I use 2N intervals since this even number results into more symmetry for the 
 trigonometric values involved. The underlying knots are:
 
-                             ã 
-                         x = Ä k      for k=0,...,2N-1 
+                             Åƒ 
+                         x = â”€ k      for k=0,...,2N-1 
                           k  N 
 
 The usual analysis will yield the following discrete Fourier coefficients:
 
-                    1 2N-1          Ú ã    ¿
-                a = Ä   ä  f(x ) cos³ Ä kl ³      for l=0,...,N
-                 l  N  k=0    k     À N    Ù
+                    1 2N-1          â”Œ Åƒ    â”
+                a = â”€   Å„  f(x ) cosâ”‚ â”€ kl â”‚      for l=0,...,N
+                 l  N  k=0    k     â”” N    â”˜
 
-                    1 2N-1          Ú ã    ¿
-                b = Ä   ä  f(x ) sin³ Ä kl ³      for l=1,...,N-1
-                 l  N  k=0    k     À N    Ù
+                    1 2N-1          â”Œ Åƒ    â”
+                b = â”€   Å„  f(x ) sinâ”‚ â”€ kl â”‚      for l=1,...,N-1
+                 l  N  k=0    k     â”” N    â”˜
 
 I will immediately discard a  and a  and these shall not be computed.
                             0      N
@@ -251,25 +251,25 @@ It is obvious that some look-up tables can be computed in advance to speed up
 things later on. We therefore have the following definitions: 
 
                       1
-                  f = Ä f(x )                 for k=0,...,2N-1
+                  f = â”€ f(x )                 for k=0,...,2N-1
                    k  N    k
 
-                         Ú ã   ¿
-                  c = cos³ Ä k ³ = cos(x )    for k=0,...,2N-1
-                   k     À N   Ù        k
+                         â”Œ Åƒ   â”
+                  c = cosâ”‚ â”€ k â”‚ = cos(x )    for k=0,...,2N-1
+                   k     â”” N   â”˜        k
 
-                         Ú ã   ¿
-                  s = sin³ Ä k ³ = sin(x )    for k=0,...,2N-1
-                   k     À N   Ù        k
+                         â”Œ Åƒ   â”
+                  s = sinâ”‚ â”€ k â”‚ = sin(x )    for k=0,...,2N-1
+                   k     â”” N   â”˜        k
 
 The quantities we want to compute can now be restated as:
 
                       2N-1
-                  a =   ä  f  c               for l=1,...,N
+                  a =   Å„  f  c               for l=1,...,N
                    l   k=0  k  (kl)%(2N)
 
                       2N-1
-                  b =   ä  f  s               for l=1,...,N
+                  b =   Å„  f  s               for l=1,...,N
                    l   k=0  k  (kl)%(2N)
 
 where % stands for the usual modulo operator.
@@ -291,7 +291,7 @@ of bits of precision in the final result, I did make a few scaling changes:
 4) The resulting a 's and b 's are divided by 2048 to bring them into [-16,16].
                   l        l
 
-5) The final results are ³ a ³ + ³ b ³ which all belong to the interval [0,32].
+5) The final results are â”‚ a â”‚ + â”‚ b â”‚ which all belong to the interval [0,32].
                             l       l
 
 This computation of Fourier coefficients implies only short integer operations, 
@@ -303,9 +303,9 @@ hurt me later on.
 
 I tried to cheat a little bit and to combine the Fourier coefficients as in:
 
-               2N-1    Ú                        ¿
-           d =   ä  f  ³ c         + s          ³      for l=1,...,N
-            l   k=0  k À  (kl)%(2N)   (kl)%(2N) Ù
+               2N-1    â”Œ                        â”
+           d =   Å„  f  â”‚ c         + s          â”‚      for l=1,...,N
+            l   k=0  k â””  (kl)%(2N)   (kl)%(2N) â”˜
 
 This would cut the operation count by two, but I found the results not so good. 
 This is equivalent to using a different mathematical basis, which is not 
@@ -334,7 +334,7 @@ feel free to double check everything and to report to me ASAP!!!
 
 
 Operation:
-ÄÄÄÄÄÄÄÄÄ
+â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 There are no command line parameters, just type FFTMORSE and there you are. 
 However, a number of keys are in use from within the program.
