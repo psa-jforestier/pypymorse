@@ -675,8 +675,10 @@ def main():
   # Decoder settings
   if (args['avrgdot'] != 0):
     avrgdot = args['avrgdot']
+    args['autostart'] = True
   if (args['avrgdot'] != 0):
     avrgdash = args['avrgdash']
+    args['autostart'] = True
   if (args['autostart'] == True):
     FFTenable = True
     reset = False
@@ -706,8 +708,6 @@ def main():
       screen.cprintf("dots  =%s   ", dots)
       screen.gotoxy(0,30);
       screen.cprintf("dashes=%s   ", dashes)
-      screen.gotoxy(40,23);
-      screen.cprintf(STATSTRING,avrgdot,avrgdash);
       screen.gotoxy(0,26);
       screen.cprintf("counterdots=%d counterdashes=%d sumdots=%d sumdashes=%d     ", counterdots, counterdashes, sumdots, sumdashes);
       screen.gotoxy(0,27);
@@ -742,7 +742,8 @@ def main():
       screen.cprintf(SAMPSTRING, counter*((KCHECK*SCHECK)/delta) )
       start = current
       counter = 0
-    
+    screen.gotoxy(40,23);
+    screen.cprintf(STATSTRING,avrgdot,avrgdash);
     
     screen.refresh()
   
