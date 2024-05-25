@@ -1,5 +1,5 @@
 # PyPyMorse
-Morse decoder program. Use audio input from soundcard. In Python. Work under Windows. From an old code fftmorse.c . Use PyAudio and NCurses
+Morse decoder program. Use audio input from soundcard. In Python. Work under Windows too, but every OS with Pyhton should work. From an old code fftmorse.c . Use PyAudio and NCurses
 
 ## Original C code
 The original C code, by François JALBERT, is under the `src/fftmorse.c/` folder. This program has been written for MSDOS with a SoundBlaster 8 sound card, and is not working anymore on 64 bits OS.
