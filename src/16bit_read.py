@@ -9,7 +9,7 @@ import random
 # https://stackoverflow.com/questions/75920565/how-can-i-record-8-bit-audio-with-pyaudio
 
 p = pyaudio.PyAudio()
-inStream = p.open(format=pyaudio.paInt16, # read in 16 byte
+inStream = p.open(format=pyaudio.paInt16, # read in 16 bits
                   channels=1,
                   rate=22050,
                   input=True,
