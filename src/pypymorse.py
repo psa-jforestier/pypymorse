@@ -588,7 +588,7 @@ def handlekey(key):
     if (freq > 3): freq = freq - 1
   elif (ch == screen.curses.KEY_DOWN):
     if (freq<(N-3)): freq = freq + 1
-  elif (ch in [ screen.curses.KEY_SUP, screen.curses.KEY_PPAGE]): freq = 3
+  elif (ch in [ 547, screen.curses.KEY_PPAGE]): freq = 3 # screen.curses.KEY_SUP (ShiftUp : some NCurses implementation do not have it)
   elif (ch in [ 548, screen.curses.KEY_NPAGE]): freq = N-3 # Shift+DOWN
   elif (ch in [screen.curses.KEY_HOME, ord('5')]): freq=(N>>1)
   elif (ch == ord('+')):
