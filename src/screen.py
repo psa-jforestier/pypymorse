@@ -2,12 +2,14 @@ import curses
 import sys
 import time
 import pprint
+import platform
 
 global stdscr
 
 
 
-
+def isWindows():
+  return platform.system() == "Windows"
   
 def clrscr():
   stdscr.clear()

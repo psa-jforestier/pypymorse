@@ -8,19 +8,6 @@ https://www.codeconvert.ai/c-to-python-converter
 Massive usage of PyAudio : https://pypi.org/project/PyAudio/
   python -m pip install pyaudio windows-curses
 
-https://stackoverflow.com/questions/4623572/how-do-i-get-a-list-of-my-devices-audio-sample-rates-using-pyaudio-or-portaudio
-
-
-stream = p.open(
-    format=FORMAT,
-    channels=CHANNELS,
-    rate=RATE,
-    input=True,
-    frames_per_buffer=FRAMES_PER_BUFFER,
-    input_device_index=1 <---- 
-
-)
-
 based on https://archive.org/details/fftmorse
 """
 import pyaudio
@@ -61,6 +48,8 @@ ONSTRING  ="Toggle FFT On/Off with Space  (now on) "
 WAITSTRING="S-Blaster DSP Mixture Ratio 1:%d  (+/-) "
 SAMPSTRING = "%d S-Blaster Samples per Second  "
 STATSTRING = "Avrg Dot:%d  Avrg Dash:%d (* resets)   "
+
+SMALL_CARRET = "■" if (screen.isWindows()) else "▮" # On linux console, the small carret is wider than the usual carret
 
 FLIP=5 # /* levels above average sufficient to trigger tone detected */
 LOG2N=4 # /* Adjust according to N way above */ 
@@ -202,7 +191,7 @@ def FFT(stream):
     level = oldfft[l] = fft[l]
     for k in range(1, level+1):
       column = 2 * k
-      screen.pokeb(0, 80+line+column, '■')
+      screen.pokeb(0, 80+line+column, SMALL_CARRET)
     for k in range(level+1, oldlevel+1):
       column = 2 * k
       screen.pokeb(0, 80 + line + column, ' ')
@@ -260,7 +249,7 @@ def FFT2tone():
   if tonedetected and not oldtonedetected:
     screen.pokeb(0, 158, '█')
   elif oldtonedetected and not tonedetected:
-    screen.pokeb(0, 158, '■')
+    screen.pokeb(0, 158, SMALL_CARRET)
   screen.refresh()    
   return
 
@@ -509,7 +498,7 @@ def morse2text():
         elif (code == 120):
           c=':'; punctuation=True
         else:
-          c='■'; punctuation=False
+          c=SMALL_CARRET; punctuation=False
         print(c, end='')
         sys.stdout.flush()
         screen.pokeb(0,(x<<1)+y160,c);
@@ -550,6 +539,7 @@ def read_data(stream):
 def read_data_buffer(stream, size):
   buf = stream.read(size)
   return buf
+  
 def updatecursor(c1, c2): # /* displays selected frequency cursor */
   global freq
   global freqm1
