@@ -25,7 +25,7 @@ I rewrite the C code to Python, make it compatible with all OS supporting Python
 
 - Automatically start Morse decoder : `python pypymorse.py --autostart`. It will start the decoder in learning mode without having to press the SPACE bar.
 
-- *TODO* No GUI : `python pypymorse.py --nogui`. Start the program in command line mode, the (old) user interface is not displayed. Imply `--autostart`. Press Ctrl+C to quit.
+- No GUI : `python pypymorse.py --nogui`. Start the program in command line mode, the (old) user interface is not displayed. Imply `--autostart`. Press Ctrl+C to quit.
 
 - Skip learning phase by specifying dot and dash sample duration : `python pypymorse.py --avrgdot 100 --avrgdash 300`. You can get the value on the GUI from a previous run. They depends of the sampling rate, and the speed of the operator, and your CPU power (100/300 are for 10 WPM at ~12KHz).
 
