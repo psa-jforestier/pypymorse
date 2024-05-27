@@ -626,6 +626,7 @@ def main():
   global sumdashes
   global firsttone
   global freq
+  global waitfactor
   parser = argparse.ArgumentParser(description='Morse decoder')
   parser.add_argument('-i', '--input',
     default=-1, metavar='ID', type=int,
@@ -639,6 +640,9 @@ def main():
   parser.add_argument('-f', '--freq',
     default = -1, metavar='F', type = int,
     help='Set audio frequency to lock on at start. From 0 to 10, default is ' + str(freq))
+  parser.add_argument('-m', '--mix',
+    default = waitfactor, metavar='M', type = int,
+    help='Set mixture ratio, aka \"wait factor\". Indicate how many sample to discard. From 1 to 10, default is ' + str(freq))
   parser.add_argument('--autostart',
     action='store_true',
     help='Start decoding automatically (no need to press SPACE)')
@@ -688,6 +692,7 @@ def main():
     dashes = [235] * M
   if (args['freq'] != -1):
     freq = args['freq'] + 3 # from command line, we accept 0..10, but internally it is 3..13
+  waitfactor = int(args['mix'])
   """
   Start C code conversion
   """
