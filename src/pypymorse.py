@@ -29,6 +29,7 @@ import argparse
 import time
 import sys
 import random
+import traceback
 
 import screen
 def print_input_device_info(idev):
@@ -209,6 +210,8 @@ def FFT(stream):
   
 def begin():
   screen.clrscr()
+  if (screen.curses.LINES < 25 or screen.curses.COLS < 80):
+    raise Exception("Terminal must be at least 25x80")
   for xx in range(1, 35):    screen.pokeb(0,(xx<<1),'─');
   for xx in range(1, 35):    screen.pokeb(0,(xx<<1)+(160*24),'─');
   for yy in range(1,24):     screen.pokeb(0,(160*yy),'│');
@@ -699,56 +702,63 @@ def main():
   kloop = sloop = delta = k = 0 # int
   start = current = 0 # longint
  
-  
-  begin();
-  start = getTimeS()
-  while (not done) :
-    for sloop in range(1, SCHECK + 1):
-      """
-      screen.gotoxy(0,29);
-      screen.cprintf("dots  =%s   ", dots)
-      screen.gotoxy(0,30);
-      screen.cprintf("dashes=%s   ", dashes)
-      screen.gotoxy(0,26);
-      screen.cprintf("counterdots=%d counterdashes=%d sumdots=%d sumdashes=%d     ", counterdots, counterdashes, sumdots, sumdashes);
-      screen.gotoxy(0,27);
-      screen.cprintf("avrgdot=%d avrgdash=%d firsttone=%d      ", avrgdot, avrgdash, firsttone);
-      screen.gotoxy(0,28);
-      screen.cprintf("oncounter=%d offcounter=%d  reset=%s ", oncounter, offcounter, reset)
-      """
-      if (FFTenable):
-        for kloop in range(1, KCHECK+1):
-          FFT(stream)
-          FFT2tone()
-          if (reset):
-            learn()
-          else:
-            tone2morse()
-            morse2text()
-      else:
-        
-        #for kloop in range(1, KCHECK+1): # can be optimized by reading a longer buffer
-        #  for k in range(0, N+N):
-        #    read_data(stream)
-        read_data_buffer(stream, KCHECK * (N + N))
-      if (screen.iskeypressed()):
-        key = screen.getlastkeypressed()
-        done = handlekey(key)
-        if (done): quit()
-    counter = counter + (N+N);
-    current = getTimeS()
-    delta = (current-start);
-    if (delta > 2):
-      screen.gotoxy(40, 24)
-      screen.cprintf(SAMPSTRING, counter*((KCHECK*SCHECK)/delta) )
-      start = current
-      counter = 0
-    screen.gotoxy(40,23);
-    screen.cprintf(STATSTRING,avrgdot,avrgdash);
-    
-    screen.refresh()
-  
-  p.terminate()
+  try:
+    begin();
+
+    start = getTimeS()
+    while (not done) :
+      for sloop in range(1, SCHECK + 1):
+        """
+        screen.gotoxy(0,29);
+        screen.cprintf("dots  =%s   ", dots)
+        screen.gotoxy(0,30);
+        screen.cprintf("dashes=%s   ", dashes)
+        screen.gotoxy(0,26);
+        screen.cprintf("counterdots=%d counterdashes=%d sumdots=%d sumdashes=%d     ", counterdots, counterdashes, sumdots, sumdashes);
+        screen.gotoxy(0,27);
+        screen.cprintf("avrgdot=%d avrgdash=%d firsttone=%d      ", avrgdot, avrgdash, firsttone);
+        screen.gotoxy(0,28);
+        screen.cprintf("oncounter=%d offcounter=%d  reset=%s ", oncounter, offcounter, reset)
+        """
+        if (FFTenable):
+          for kloop in range(1, KCHECK+1):
+            FFT(stream)
+            FFT2tone()
+            if (reset):
+              learn()
+            else:
+              tone2morse()
+              morse2text()
+        else:
+          read_data_buffer(stream, KCHECK * (N + N))
+        if (screen.iskeypressed()):
+          key = screen.getlastkeypressed()
+          done = handlekey(key)
+          if (done): quit()
+      counter = counter + (N+N);
+      current = getTimeS()
+      delta = (current-start);
+      if (delta > 2):
+        screen.gotoxy(40, 24)
+        screen.cprintf(SAMPSTRING, counter*((KCHECK*SCHECK)/delta) )
+        start = current
+        counter = 0
+      screen.gotoxy(40,23);
+      screen.cprintf(STATSTRING,avrgdot,avrgdash);
+      
+      screen.refresh()
+  except Exception as error:
+    screen.curses.nocbreak()
+    screen.curses.echo()
+    screen.curses.curs_set(True)
+    screen.curses.endwin()
+    print(traceback.format_exc())
+  finally:
+    screen.curses.nocbreak()
+    screen.curses.echo()
+    screen.curses.curs_set(True)
+    screen.curses.endwin()
+    p.terminate()
 
 if __name__ == "__main__":
     main()
