@@ -50,7 +50,6 @@ SAMPSTRING = "%d S-Blaster Samples per Second  "
 STATSTRING = "Avrg Dot:%d  Avrg Dash:%d (* resets)   "
 
 SMALL_CARRET = "■" if (screen.isWindows()) else "▮" # On linux console, the small carret is wider than the usual carret
-SMALL_CARRET = "■"
 
 FLIP=5 # /* levels above average sufficient to trigger tone detected */
 LOG2N=4 # /* Adjust according to N way above */ 
