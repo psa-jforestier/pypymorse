@@ -27,9 +27,9 @@ I rewrite the C code to Python, make it compatible with all OS supporting Python
 
 - *TODO* No GUI : `python pypymorse.py --nogui`. Start the program in command line mode, the (old) user interface is not displayed. Imply `--autostart`. Press Ctrl+C to quit.
 
-- Skip learning phase by specifying dot and dash sample duration : `python pypymorse.py --avrgdot 100 --avrgdasg 300`. You can get the value on the GUI from a previous run. They depends of the sampling rate, and the speed of the operator, and your CPU power (100/300 are for 10 WPM at ~12KHz).
+- Skip learning phase by specifying dot and dash sample duration : `python pypymorse.py --avrgdot 100 --avrgdash 300`. You can get the value on the GUI from a previous run. They depends of the sampling rate, and the speed of the operator, and your CPU power (100/300 are for 10 WPM at ~12KHz).
 
-- *TODO* Specify the frequency : `python pypymorse.py --freq F`. Indicate which frequency to lock to use to find signal. This value vary from 0 (low freq) to 10 (high freq), and depends of the sampling rate.
+- Specify the frequency : `python pypymorse.py --freq F`. Indicate which frequency to lock to use to find signal. This value vary from 0 (low freq) to 10 (high freq), and depends of the sampling rate.
 
 - *TODO* Specify the mixture ratio : `python pypymorse.py --mix M`. Indicate how many sample to discard. Basically, it allows to change the sample frequency from full speed (M=1 : 44smp/s) to low speed (M=10 : 4smp/s). It is supposed to change the CPU usage, but there is no real difference.
 

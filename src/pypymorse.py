@@ -62,7 +62,6 @@ active = False
 tonedetected = False  # indicates a tone is currently present
 freqm2 = freqm1 = freqp1 = freqp2 = 0
 freq = (N // 2)  # interesting frequency
-freq = 3
 
   
 def FFT(stream):
@@ -626,6 +625,7 @@ def main():
   global sumdots
   global sumdashes
   global firsttone
+  global freq
   parser = argparse.ArgumentParser(description='Morse decoder')
   parser.add_argument('-i', '--input',
     default=-1, metavar='ID', type=int,
@@ -636,12 +636,18 @@ def main():
   parser.add_argument('--avrgdash',
     default = 0, metavar='N', type = int,
     help='Set default dash sample count and avoid learning phase')
+  parser.add_argument('-f', '--freq',
+    default = -1, metavar='F', type = int,
+    help='Set audio frequency to lock on at start. From 0 to 10, default is ' + str(freq))
   parser.add_argument('--autostart',
     action='store_true',
     help='Start decoding automatically (no need to press SPACE)')
   parser.add_argument('--devices',
     action='store_true',
     help='Enumerate and print existing devices and their ID to use with -i')
+  #parser.add_argument('--nogui',
+  #  action='store_true',
+  #  help='Start the program in command line mode. Imply --autostart, adjust decoder with --avrgdot / --avrgdash / --freq')
   args = vars(parser.parse_args())
   pprint.pprint(args)
   
@@ -680,6 +686,8 @@ def main():
     sumdashes = avrgdash * M
     dots = [75] * M
     dashes = [235] * M
+  if (args['freq'] != -1):
+    freq = args['freq'] + 3 # from command line, we accept 0..10, but internally it is 3..13
   """
   Start C code conversion
   """
@@ -738,16 +746,10 @@ def main():
       
       screen.refresh()
   except Exception as error:
-    screen.curses.nocbreak()
-    screen.curses.echo()
-    screen.curses.curs_set(True)
-    screen.curses.endwin()
+    screen.deinit()
     print(traceback.format_exc())
   finally:
-    screen.curses.nocbreak()
-    screen.curses.echo()
-    screen.curses.curs_set(True)
-    screen.curses.endwin()
+    screen.deinit()
     p.terminate()
 
 if __name__ == "__main__":

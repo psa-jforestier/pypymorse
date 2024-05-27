@@ -60,6 +60,14 @@ def init():
   if curses.has_colors():
     curses.start_color()  
   stdscr.keypad(True)
+  
+def deinit():
+  global stdscr
+  curses.nocbreak()
+  curses.echo()
+  curses.curs_set(True)
+  curses.endwin()
+
 if __name__ == "__main__":
 
   #curses.noecho()
