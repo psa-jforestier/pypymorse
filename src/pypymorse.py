@@ -50,6 +50,7 @@ SAMPSTRING = "%d S-Blaster Samples per Second  "
 STATSTRING = "Avrg Dot:%d  Avrg Dash:%d (* resets)   "
 
 SMALL_CARRET = "■" if (screen.isWindows()) else "▮" # On linux console, the small carret is wider than the usual carret
+SMALL_CARRET = "■"
 
 FLIP=5 # /* levels above average sufficient to trigger tone detected */
 LOG2N=4 # /* Adjust according to N way above */ 
@@ -62,9 +63,10 @@ active = False
 tonedetected = False  # indicates a tone is currently present
 freqm2 = freqm1 = freqp1 = freqp2 = 0
 freq = (N // 2)  # interesting frequency
-
+nogui = False
   
 def FFT(stream):
+  global nogui
   S0=0 #/* corresponds to 0.0 */
   S1=3
   S2=6
@@ -81,7 +83,6 @@ def FFT(stream):
   
   f = [0] * (N+N)
   
-  
   for k in range(0, N+N):
     #for l in range (1, waitfactor):
     #  read_data(stream) 
@@ -90,7 +91,6 @@ def FFT(stream):
   # print samples
   #for k in range(0, N+N - 4):
   #  screen.printfxy(3 + (5 * k), 0, "%+03d  ", f[k])
-  
   # The infamous fft
   f17m1 =f[17]-f[1];  f17p1 =f[17]+f[1];
   f18m2 =f[18]-f[2];  f18p2 =f[18]+f[2];
@@ -184,19 +184,23 @@ def FFT(stream):
   fft[14]=(abs(s4Pf30f22Ms8Mf24-s6Pf31f25Ps2Pf29f27)>>SCALE)+(abs(s4Mf30f26Ps8Mf28-s6Mf29f27Ps2Mf31f25)>>SCALE);
   fft[15]=(abs(s2Mf26Ps4f28s6f30Ms8f16-s1Mf25s3f27s5f29s7f31)>>SCALE)+(abs(s2Pf30Ps4f28s6f26Ps8f24-s1Pf31s3f29s5f27s7f25)>>SCALE);
 
-  for l in range(1, N):
-    line = 160 * l
-    oldlevel = oldfft[l]
-    level = oldfft[l] = fft[l]
-    for k in range(1, level+1):
-      column = 2 * k
-      screen.pokeb(0, 80+line+column, SMALL_CARRET)
-    for k in range(level+1, oldlevel+1):
-      column = 2 * k
-      screen.pokeb(0, 80 + line + column, ' ')
-  screen.refresh()
+  #print(fft)
+  if (not nogui):
+    for l in range(1, N):
+      line = 160 * l
+      oldlevel = oldfft[l]
+      level = oldfft[l] = fft[l]
+      for k in range(1, level+1):
+        column = 2 * k
+        screen.pokeb(0, 80+line+column, SMALL_CARRET)
+      for k in range(level+1, oldlevel+1):
+        column = 2 * k
+        screen.pokeb(0, 80 + line + column, ' ')
+    screen.refresh()
   
 def begin():
+  screen.init()
+  screen.nodelay(True) # do not block when waiting for a key
   screen.clrscr()
   if (screen.curses.LINES < 25 or screen.curses.COLS < 80):
     raise Exception("Terminal must be at least 25x80")
@@ -232,6 +236,7 @@ def FFT2tone():
   global old1active
   global active
   global tonedetected
+  global nogui
   average = 0
   for l in range(1, N):
     average += fft[l]
@@ -241,15 +246,15 @@ def FFT2tone():
   old2active = old1active
   old1active = active
   active=( (fft[freqm2]+fft[freqp2]+fft[freqm1]+fft[freqp1]+fft[freq])>=limit )
-  
+
   oldtonedetected = tonedetected
   tonedetected = (active or old1active or old2active or old3active)
-  #screen.pokeb(0, 158, '?')
-  if tonedetected and not oldtonedetected:
-    screen.pokeb(0, 158, '█')
-  elif oldtonedetected and not tonedetected:
-    screen.pokeb(0, 158, SMALL_CARRET)
-  screen.refresh()    
+  if (not nogui):
+    if tonedetected and not oldtonedetected:
+      screen.pokeb(0, 158, '█')
+    elif oldtonedetected and not tonedetected:
+      screen.pokeb(0, 158, SMALL_CARRET)
+    screen.refresh()    
   return
 
 # /*----------------------------- Tone to Morse --------------------------------*/
@@ -384,7 +389,8 @@ def morse2text():
   global dot
   global dash
   global space
-  
+  global nogui
+    
   if (dot == True):
     code = code + mask
     mask = mask << 1
@@ -393,7 +399,7 @@ def morse2text():
     if (dash == True):
       mask = mask << 1
       dash = False
-    else:
+    else:      
       if (space == True):
         code += mask
         if (code == 2):
@@ -498,35 +504,35 @@ def morse2text():
           c=':'; punctuation=True
         else:
           c=SMALL_CARRET; punctuation=False
+        code = 0
+        mask = 1
+        space = False
         print(c, end='')
         sys.stdout.flush()
-        screen.pokeb(0,(x<<1)+y160,c);
-        x = x + 1
-        
-        if (x == 35):
-          y = y + 1
-          y160 += 160
-          if (y == 24):
-            y = 1
-            y160 = 160
-          for x in range(1, 35):
-            screen.pokeb(0, (x<<1)+y160,' ')
-          x = 1
-        if (punctuation):
-          screen.pokeb(0, (x<<1)+y160,' ')
+        if (not nogui):
+          screen.pokeb(0,(x<<1)+y160,c);
           x = x + 1
           if (x == 35):
             y = y + 1
+            y160 += 160
             if (y == 24):
               y = 1
               y160 = 160
             for x in range(1, 35):
               screen.pokeb(0, (x<<1)+y160,' ')
             x = 1
-        screen.pokeb(0,(x<<1)+y160,'_')
-        code = 0
-        mask = 1
-        space = False
+          if (punctuation):
+            screen.pokeb(0, (x<<1)+y160,' ')
+            x = x + 1
+            if (x == 35):
+              y = y + 1
+              if (y == 24):
+                y = 1
+                y160 = 160
+              for x in range(1, 35):
+                screen.pokeb(0, (x<<1)+y160,' ')
+              x = 1
+          screen.pokeb(0,(x<<1)+y160,'_')
     
   return
 
@@ -626,7 +632,13 @@ def main():
   global sumdashes
   global firsttone
   global freq
+  global freqm2
+  global freqm1
+  global freqp2
+  global freqp1
   global waitfactor
+  global nogui
+  
   parser = argparse.ArgumentParser(description='Morse decoder')
   parser.add_argument('-i', '--input',
     default=-1, metavar='ID', type=int,
@@ -652,11 +664,10 @@ def main():
   parser.add_argument('--irate',
     default = 44100, metavar='F', type = int,
     help='Set sample rate of the input device. Default is %(default)s')
-  #parser.add_argument('--nogui',
-  #  action='store_true',
-  #  help='Start the program in command line mode. Imply --autostart, adjust decoder with --avrgdot / --avrgdash / --freq')
+  parser.add_argument('--nogui',
+    action='store_true',
+    help='Start the program in command line mode. Imply --autostart, adjust decoder with --avrgdot / --avrgdash / --freq.')
   args = vars(parser.parse_args())
-  pprint.pprint(args)
   
   inputdeviceid = 0
   p = pyaudio.PyAudio()
@@ -676,26 +687,32 @@ def main():
     rate=args['irate'],
     format=pyaudio.paInt16, # PaAudio do not work with 8bit samples
     input_device_index=inputdeviceid)
-  screen.init()
-  screen.nodelay(True) # do not block when waiting for a key
   
   # Decoder settings
   if (args['avrgdot'] != 0):
     avrgdot = args['avrgdot']
+    dots = [avrgdot] * M
+    sumdots = avrgdot * M
     args['autostart'] = True
-  if (args['avrgdot'] != 0):
+    reset = False
+  if (args['avrgdash'] != 0):
     avrgdash = args['avrgdash']
+    dashes = [avrgdash] * M
+    sumdashes = avrgdash * M
     args['autostart'] = True
+    reset = False
   if (args['autostart'] == True):
     FFTenable = True
-    reset = False
-    sumdots = avrgdot * M
-    sumdashes = avrgdash * M
-    dots = [75] * M
-    dashes = [235] * M
   if (args['freq'] != -1):
     freq = args['freq'] + 3 # from command line, we accept 0..10, but internally it is 3..13
   waitfactor = int(args['mix'])
+  nogui = args['nogui']
+  if (nogui):
+    FFTenable = True
+    freqp1=freq+1
+    freqm1=freq-1
+    freqp2=freq+2
+    freqm2=freq-2
   """
   Start C code conversion
   """
@@ -709,7 +726,8 @@ def main():
   start = current = 0 # longint
  
   try:
-    begin();
+    if (not nogui):
+      begin();
 
     start = getTimeS()
     while (not done) :
@@ -737,27 +755,30 @@ def main():
               morse2text()
         else:
           read_data_buffer(stream, KCHECK * (N + N))
-        if (screen.iskeypressed()):
-          key = screen.getlastkeypressed()
-          done = handlekey(key)
-          if (done): quit()
-      counter = counter + (N+N);
-      current = getTimeS()
-      delta = (current-start);
-      if (delta > 2):
-        screen.gotoxy(40, 24)
-        screen.cprintf(SAMPSTRING, counter*((KCHECK*SCHECK)/delta) )
-        start = current
-        counter = 0
-      screen.gotoxy(40,23);
-      screen.cprintf(STATSTRING,avrgdot,avrgdash);
-      
-      screen.refresh()
+        if (not nogui) :
+          if (screen.iskeypressed()):
+            key = screen.getlastkeypressed()
+            done = handlekey(key)
+            if (done): quit()
+      if (not nogui):
+        counter = counter + (N+N);
+        current = getTimeS()
+        delta = (current-start);
+        if (delta > 2):
+          screen.gotoxy(40, 24)
+          screen.cprintf(SAMPSTRING, counter*((KCHECK*SCHECK)/delta) )
+          start = current
+          counter = 0
+        screen.gotoxy(40,23);
+        screen.cprintf(STATSTRING,avrgdot,avrgdash);      
+        screen.refresh()
   except Exception as error:
-    screen.deinit()
+    if (not nogui):
+      screen.deinit()
     print(traceback.format_exc())
   finally:
-    screen.deinit()
+    if (not nogui):
+      screen.deinit()
     p.terminate()
 
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ I rewrite the C code to Python, make it compatible with all OS supporting Python
   
 - Specify the sound input : use `python pypymorse.py --devices` to list all available devices. Then use `python pypymorse.py -i ID` with the ID number you got from the previous command. Yes, it can use "Digital Stereo Mix" or "Virtual Audio Cable" to work with local audio (from a SDR software for example). *TODO* it is possible to use standard input STDIN to get sample from a piped command.
 
-- Automatically start Morse decoder : `python pypymorse.py --autostart`. It will start the decoder without having to press the SPACE bar.
+- Automatically start Morse decoder : `python pypymorse.py --autostart`. It will start the decoder in learning mode without having to press the SPACE bar.
 
 - *TODO* No GUI : `python pypymorse.py --nogui`. Start the program in command line mode, the (old) user interface is not displayed. Imply `--autostart`. Press Ctrl+C to quit.
 
