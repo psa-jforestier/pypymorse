@@ -222,7 +222,7 @@ def begin():
   for l in range(1, N):
     line += 160
     fft[l]=0
-    screen.pokeb(0,80+line,'­');
+    screen.pokeb(0,80+line,'-');
   screen.refresh()
   return
 
