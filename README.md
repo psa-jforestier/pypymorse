@@ -33,7 +33,7 @@ I rewrite the C code to Python, make it compatible with all OS supporting Python
 
 - Specify the mixture ratio : `python pypymorse.py --mix M`. Indicate how many sample to discard. Basically, it allows to change the sample frequency from full speed (M=1 : 44smp/s) to low speed (M=10 : 4smp/s). It is supposed to change the CPU usage, but there is no real difference.
 
-- *TODO* Change input sample rate : `python pypymorse.py --irate F`. Modify the sample rate of the input device, only to use for unusual sound card that are not compatible with the default 44100 sampling rate.
+- Change input sample rate : `python pypymorse.py --irate F`. Modify the sample rate of the input device, only to use for unusual sound card that are not compatible with the default 44100 sampling rate.
 
 #### Key bindings
 

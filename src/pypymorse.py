@@ -639,16 +639,19 @@ def main():
     help='Set default dash sample count and avoid learning phase')
   parser.add_argument('-f', '--freq',
     default = -1, metavar='F', type = int,
-    help='Set audio frequency to lock on at start. From 0 to 10, default is ' + str(freq))
+    help='Set audio frequency to lock on at start. From 0 to 10, default is %(default)s')
   parser.add_argument('-m', '--mix',
     default = waitfactor, metavar='M', type = int,
-    help='Set mixture ratio, aka \"wait factor\". Indicate how many sample to discard. From 1 to 10, default is ' + str(freq))
+    help='Set mixture ratio, aka \"wait factor\". Indicate how many sample to discard. From 1 to 10, default is %(default)s')
   parser.add_argument('--autostart',
     action='store_true',
     help='Start decoding automatically (no need to press SPACE)')
   parser.add_argument('--devices',
     action='store_true',
     help='Enumerate and print existing devices and their ID to use with -i')
+  parser.add_argument('--irate',
+    default = 44100, metavar='F', type = int,
+    help='Set sample rate of the input device. Default is %(default)s')
   #parser.add_argument('--nogui',
   #  action='store_true',
   #  help='Start the program in command line mode. Imply --autostart, adjust decoder with --avrgdot / --avrgdash / --freq')
@@ -670,7 +673,7 @@ def main():
   print("  version :", pyaudio.get_portaudio_version_text())
   stream = p.open(input=True, output = False,
     channels=1,
-    rate=44100,
+    rate=args['irate'],
     format=pyaudio.paInt16, # PaAudio do not work with 8bit samples
     input_device_index=inputdeviceid)
   screen.init()
