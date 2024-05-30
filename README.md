@@ -17,6 +17,8 @@ I rewrite the C code to Python, make it compatible with all OS supporting Python
 
   Act exactly like the good old DOS program. It uses the default sound input from your system. By default, Morse decoding is not enable, you must press SPACE bar to start. See key binding bellow. Your terminal window must have at least 80x25 chars.
   
+  Special note for Windows : if you are running it under Git Bash, replace all `python` by `winpty python` or you will have "Redirection is not supported.".
+  
 - Advanced generic usage : `python pypymorse.py [A lot of cool parameters]`
 
   Use the `--help` switch to display new options and features of the Morse decoder.
