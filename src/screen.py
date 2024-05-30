@@ -15,7 +15,7 @@ def clrscr():
   stdscr.clear()
   stdscr.refresh()
   
-def pokeb(memoryseg, xy, char):
+def pokeb(memoryseg: int, xy: int, char):
   x = xy >> 1
   y = int((xy - x) / 160)
   y = int(xy / 160)
@@ -23,24 +23,24 @@ def pokeb(memoryseg, xy, char):
   stdscr.addch(y, x, char)
   return
 
-def printfxy(x, y, format, *args):
+def printfxy(x: int, y: int, format: str, *args):
   stdscr.addstr(y, x,  format % args)
   
 def refresh():
   stdscr.refresh()
   
-def gotoxy(x,y):
+def gotoxy(x: int,y: int):
   global XPOS
   global YPOS
   XPOS=x
   YPOS=y
 
-def cprintf(format, *args):
+def cprintf(format: str, *args):
   global XPOS
   global YPOS
   stdscr.addstr(YPOS, XPOS, format % args)
   
-def nodelay(flag):
+def nodelay(flag: bool):
   stdscr.nodelay(flag)
   
 def getlastkeypressed():
