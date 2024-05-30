@@ -48,12 +48,15 @@ ONSTRING  ="Toggle FFT On/Off with Space  (now on) "
 WAITSTRING="S-Blaster DSP Mixture Ratio 1:%d  (+/-) "
 SAMPSTRING = "%d S-Blaster Samples per Second  "
 STATSTRING = "Avrg Dot:%d  Avrg Dash:%d (* resets)   "
+AUDIOGAINSTRING = "Audio Gain x%2.1f (change with g/G) "
 
 SMALL_CARRET = "■" if (screen.isWindows()) else "▮" # On linux console, the small carret is wider than the usual carret
 
 FLIP=5 # /* levels above average sufficient to trigger tone detected */
 LOG2N=4 # /* Adjust according to N way above */ 
 
+audiogain=3
+AUDIOGAINMULTIPLIER=[0.1, 0.2, 0.5, 1, 1.5, 2, 4, 10]
 # from FFT2tone
 old3active = False
 old2active = False
@@ -66,6 +69,8 @@ nogui = False
   
 def FFT(stream):
   global nogui
+  global audiogain
+  global AUDIOGAINMULTIPLIER
   S0=0 #/* corresponds to 0.0 */
   S1=3
   S2=6
@@ -76,7 +81,7 @@ def FFT(stream):
   S7=16
   S8=16 #/* corresponds to 1.0 */
   SCALE=11 #/* scale FFT with 2**SCALE from big values to low */
-
+  audiomult=AUDIOGAINMULTIPLIER[audiogain]
   nbread = 0
   chunk = 1
   
@@ -86,7 +91,12 @@ def FFT(stream):
     #for l in range (1, waitfactor):
     #  read_data(stream) 
     if (waitfactor > 1): read_data_buffer(stream, waitfactor - 1)
-    f[k] = (read_data(stream) ^ 0x80) - 128
+    v = (read_data(stream) ^ 0x80) - 128
+    if (audiomult != 1) :
+      v = int(v * audiomult)
+      if (v > 128): v = 128
+      elif (v < -128): v = -128
+    f[k] = v
   # print samples
   #for k in range(0, N+N - 4):
   #  screen.printfxy(3 + (5 * k), 0, "%+03d  ", f[k])
@@ -578,6 +588,7 @@ def handlekey(key):
   global avrgdot
   global avrgdash
   global firsttone
+  global audiogain
   updatecursor(' ',' ')
   ch = screen.getlastkeypressed()
   if (ch == 27): return True # ESC
@@ -608,6 +619,12 @@ def handlekey(key):
     sumdots=sumdashes=0
     avrgdot=avrgdash=0
     firsttone=0
+  elif (ch == ord('g') and audiogain < len(AUDIOGAINMULTIPLIER) - 1 ):
+    audiogain += 1
+    screen.printfxy(40,0,AUDIOGAINSTRING,AUDIOGAINMULTIPLIER[audiogain])
+  elif (ch == ord('G') and audiogain > 0):
+    audiogain -= 1
+    screen.printfxy(40,0,AUDIOGAINSTRING,AUDIOGAINMULTIPLIER[audiogain])
   updatecursor('=','>');
   
   return False
@@ -637,6 +654,8 @@ def main():
   global freqp1
   global waitfactor
   global nogui
+  global audiogain
+  global AUDIOGAINMULTIPLIER
   
   parser = argparse.ArgumentParser(description='Morse decoder')
   parser.add_argument('-i', '--input',
@@ -663,6 +682,9 @@ def main():
   parser.add_argument('--irate',
     default = 44100, metavar='F', type = int,
     help='Set sample rate of the input device. Default is %(default)s')
+  parser.add_argument('-g', '--gain', 
+    default = 1, metavar='N', type = float,
+    help='Audio gain multiplier, from 0.1 to 10. Default is %(default)s')
   parser.add_argument('--nogui',
     action='store_true',
     help='Start the program in command line mode. Imply --autostart, adjust decoder with --avrgdot / --avrgdash / --freq.')
@@ -705,6 +727,11 @@ def main():
   if (args['freq'] != -1):
     freq = args['freq'] + 3 # from command line, we accept 0..10, but internally it is 3..13
   waitfactor = int(args['mix'])
+  if (args['gain'] != 1):
+    AUDIOGAINMULTIPLIER.append(args['gain'] * 1.0)
+    audiogain = len(AUDIOGAINMULTIPLIER) - 1
+    
+    
   nogui = args['nogui']
   if (nogui):
     FFTenable = True
@@ -763,13 +790,14 @@ def main():
         counter = counter + (N+N);
         current = getTimeS()
         delta = (current-start);
+        screen.printfxy(40,0,AUDIOGAINSTRING,AUDIOGAINMULTIPLIER[audiogain])
         if (delta > 2):
           screen.gotoxy(40, 24)
           screen.cprintf(SAMPSTRING, counter*((KCHECK*SCHECK)/delta) )
           start = current
           counter = 0
         screen.gotoxy(40,23);
-        screen.cprintf(STATSTRING,avrgdot,avrgdash);      
+        screen.cprintf(STATSTRING,avrgdot,avrgdash);              
         screen.refresh()
   except Exception as error:
     if (not nogui):

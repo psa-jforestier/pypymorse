@@ -37,6 +37,8 @@ I rewrite the C code to Python, make it compatible with all OS supporting Python
 
 - Change input sample rate : `python pypymorse.py --irate F`. Modify the sample rate of the input device, only to use for unusual sound card that are not compatible with the default 44100 sampling rate.
 
+- Change audio gain : `python pypymorse.py --gain N`. Modify the audio multiplier. N is a float value. Default is 1.
+
 #### Key bindings
 
 The keys of the Python versions are almost the same as the good old DOS version :
@@ -70,6 +72,7 @@ The keys of the Python versions are almost the same as the good old DOS version 
 <Shift 5><Home>    the middle of the FFT display, or if several morse signals of 
 <Shift Down><PgDn> different tone frequencies are active at the same time. In the 
 <Down Arrow>       latter case, you can isolate the signal of interest for you.
+<g><G>  Increase or reduce the audio gain.
 ```
 
 
