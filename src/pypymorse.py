@@ -91,12 +91,19 @@ def FFT(stream):
     #for l in range (1, waitfactor):
     #  read_data(stream) 
     if (waitfactor > 1): read_data_buffer(stream, waitfactor - 1)
-    v = (read_data(stream) ^ 0x80) - 128
-    if (audiomult != 1) :
-      v = int(v * audiomult)
-      if (v > 128): v = 128
-      elif (v < -128): v = -128
+    
+    high,low = read_data16(stream)
+    if (audiomult == 1):
+      v = (high ^ 0x80) - 128 # no audio gain, we use the high part of the 16 bits sample as a 8 bit signed sample
+    else:
+      v = (high << 8) + low # with audio gain, get the 16bits sample
+      v = (v ^ 0x8000) - 0x8000 # convert it to a signed value
+      v = int(v * audiomult) 
+      if (v > 32768): v = 32768
+      elif (v < -32768): v = -32768
+      v = v >> 8 # keep the high part as a 8 bits value
     f[k] = v
+    
   # print samples
   #for k in range(0, N+N - 4):
   #  screen.printfxy(3 + (5 * k), 0, "%+03d  ", f[k])
@@ -549,6 +556,12 @@ def read_data(stream):
   buf = stream.read(1) # Return a 16 bits buffers
   high = buf[1]
   return high
+
+def read_data16(stream):
+  buf = stream.read(1) # Return a 16 bits buffers
+  high = buf[1]
+  low = buf[0]
+  return high,low
 
 def read_data_buffer(stream, size):
   buf = stream.read(size)
