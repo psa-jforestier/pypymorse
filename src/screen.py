@@ -35,6 +35,9 @@ def gotoxy(x: int,y: int):
   XPOS=x
   YPOS=y
 
+def printf(format: str, *args):
+  sys.stdout.write(format % args)
+
 def cprintf(format: str, *args):
   global XPOS
   global YPOS
