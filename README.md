@@ -11,6 +11,9 @@ I rewrite the C code to Python, make it compatible with all OS supporting Python
 - install dependecies : Python3 and libraries by using `python -m pip install pyaudio windows-curses` (change curses if you use an other OS).
 - binary install : a standalone Windows binary will be provided.
 
+#### Installing Portaudio / Pyaudio on linux
+If `sudo pip3 install pyaudio` fails with `command 'x86_64-linux-gnu-gcc' failed with exit status 1` it is because you need to install the Portaudio system library before installing Pyaudio. Fix this with `sudo apt-get install portaudio19-dev python-pyaudio python3-pyaudio`.
+
 ### Usage
 
 - Basic usage : `python pypymorse.py`
