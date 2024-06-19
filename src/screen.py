@@ -6,7 +6,7 @@ import platform
 
 global stdscr
 
-
+from curses.textpad import Textbox, rectangle
 
 def isWindows():
   return platform.system() == "Windows"
@@ -25,6 +25,16 @@ def pokeb(memoryseg: int, xy: int, char):
 
 def printfxy(x: int, y: int, format: str, *args):
   stdscr.addstr(y, x,  format % args)
+
+def printfxyc(x: int, y: int, c, format: str, *args):
+  stdscr.addstr(y, x,  format % args, curses.color_pair(c))
+
+def promptxy(x: int, y: int, question):
+  curses.echo()
+  stdscr.addstr(y, x, question)
+  stdscr.refresh()
+  input = stdscr.getstr(y, x+len(question), 20)
+  return input
   
 def refresh():
   stdscr.refresh()
@@ -80,8 +90,11 @@ if __name__ == "__main__":
   stdscr.addstr(0, 0, "Hello, world from curses!")
   print("Hello world with print")
   
-  stdscr.getch()
   nodelay(True)
+  curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_YELLOW)
+  printfxyc(1,1,1, " ░▒▓█")
+
+
   while(not iskeypressed()):
     #print("in the loop...")
     time.sleep(0.1)
