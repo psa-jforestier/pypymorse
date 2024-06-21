@@ -29,12 +29,14 @@ def printfxy(x: int, y: int, format: str, *args):
 def printfxyc(x: int, y: int, c, format: str, *args):
   stdscr.addstr(y, x,  format % args, curses.color_pair(c))
 
-def promptxy(x: int, y: int, question):
+def promptxy(x: int, y: int, question, clear=False):
   curses.echo()
   stdscr.addstr(y, x, question)
   stdscr.refresh()
-  input = stdscr.getstr(y, x+len(question), 20)
-  return input
+  response = stdscr.getstr(y, x+len(question), 20)
+  if (clear):
+    stdscr.addstr(y, x, " " * (len(question) + len(response)))
+  return response
   
 def refresh():
   stdscr.refresh()
